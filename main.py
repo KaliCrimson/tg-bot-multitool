@@ -4,7 +4,6 @@ import logging
 import time
 from aiogram import Bot, Dispatcher, executor, types
 import openai
-from bs4 import BeautifulSoup
 from openexchangerate import OpenExchangeRates
  
 client = OpenExchangeRates(api_key="a9f703b216bb4ae892dfe9c852de596f")
@@ -78,7 +77,7 @@ async def kurs_valut(message: types.Message):
         x=vvod.split('; ')
         name_value=x[0]
         kolizhestvo=x[1]
-        vivod=int(price[name_value])*int(kolizhestvo)
+        vivod=float(price[name_value])*float(kolizhestvo)
         await message.reply(vivod)
     except:
         await message.reply('incorrect input')
