@@ -4,6 +4,7 @@ import logging
 import time
 from aiogram import Bot, Dispatcher, executor, types
 import openai
+from bs4 import BeautifulSoup
 from openexchangerate import OpenExchangeRates
  
 client = OpenExchangeRates(api_key="a9f703b216bb4ae892dfe9c852de596f")
@@ -17,14 +18,13 @@ open_weather_token='8725811879ec8424cd3a8e950f0011b9'
 
 bot_token = '6282024430:AAHlACtH9Grplwr0GJZijhsPN6rWc_lI0Po'# токен телеграмм бота
 
-api_key = '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'  #api openai для генерации картинок(dall-e) и gpt
+api_key = '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' #api openai для генерации картинок(dall-e) и gpt
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=bot_token)
 dp = Dispatcher(bot)
 
 openai.api_key = api_key #api openai для генерации картинок(dall-e) и gpt
-
 messages = {} #для сохранения разговора в /gpt
 
 #функция жля генерации картинок:
@@ -77,8 +77,8 @@ async def kurs_valut(message: types.Message):
         x=vvod.split('; ')
         name_value=x[0]
         kolizhestvo=x[1]
-        vivod=float(price[name_value])*float(kolizhestvo)
-        await message.reply(vivod)
+        vivod=int(price[name_value])*int(kolizhestvo)
+        await message.reply(f'1 доллар= {vivod} {name_value}')
     except:
         await message.reply('incorrect input')
     
@@ -202,10 +202,10 @@ async def get_weather(message: types.Message):
              data["sys"]["sunrise"]) 
   
          await message.reply(f"***{datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}***\n" 
-               f"городе: {city}\nТемпература: {cur_weather}C° {wd}\n" 
+               f"Погода в городе: {city}\nТемпература: {cur_weather}C° {wd}\n" 
                f"Влажность: {humidity}%\nДавление: {pressure} мм.рт.ст\nВетер: {wind} м/с\n" 
-               f"Восход: {sunrise_timestamp}\nЗакат: {sunset_timestamp}\nПродолжительность дня: {length_of_the_day}\n" 
-               f"Удачи)"
+               f"Восход солнца: {sunrise_timestamp}\nЗакат солнца: {sunset_timestamp}\nПродолжительность дня: {length_of_the_day}\n" 
+               f"***Хорошего дня!***" 
                ) 
  
     except: 
