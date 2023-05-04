@@ -4,7 +4,6 @@ import logging
 import time
 from aiogram import Bot, Dispatcher, executor, types
 import openai
-from bs4 import BeautifulSoup
 from openexchangerate import OpenExchangeRates
  
 client = OpenExchangeRates(api_key="a9f703b216bb4ae892dfe9c852de596f")
@@ -46,9 +45,70 @@ async def start_cmd(message: types.Message):
     try:
         username = message.from_user.username
         messages[username] = []
-        await message.answer(f"Привет,я чат бот ,у меня есть несколько функций: /n  /image ...-нартсовать рисунок /n /gpt... -спросить вопрос /n /weather 'город' - прогноз погоды /n /money -курс валют")
+        await message.answer(f"Привет {username},я чат бот ,у меня есть несколько функций: \n /image ...-нартсовать рисунок(в разработке) \n /gpt... -спросить вопрос(в разработке) \n /weather - прогноз погоды  \n /money -курс валют \n /poll -создать опрос\n/dice -поиграть\n/donate -сылочка на донат \n/dict -переводчик\n/fix-исправить фразу")
     except Exception as e:
         logging.error('Error')
+        
+#/donate
+@dp.message_handler(commands=['donate'])
+async def donate(message: types.Message):
+        await message.answer(f"Пожалуста скинь денюжек\nЭто ускорит выход обновения\nhttps://www.sberbank.com/ru/person/dl/jc?linkname=mK3yKz8m4Ti45aCt0")
+
+#/fix
+@dp.message_handler(commands=["fix"])
+
+async def fix(message: types.Message):
+    mess=message.text
+    mess=mess.replace("/fix ","")
+    mess=mess.replace(" ","+")
+    rek=requests.get(f"https://predictor.yandex.net/api/v1/predict.json/complete?key=pdct.1.1.20230502T171116Z.a00397515ddc2594.7b67794b02491b24599de994409e35970f46912e&q={mess}&lang=en")
+    fixe=rek.json()
+    fixi=fixe["text"]
+    chekat=fixe["endOfWord"]
+    if chekat==False:
+        await message.reply(f"исправленная фраза:{fixi}")
+    else:
+        await message.reply(f"слово и так целое либо ошибка\nПример использования:\n/fix appl")
+          
+#/dict
+@dp.message_handler(commands=['dict'])
+async def dict(message: types.Message):
+    try:
+        eng=message.text
+        eng =eng.replace("/dict ","")
+        perevod = requests.get(f"https://dictionary.yandex.net/api/v1/dicservice.json/lookup?key=dict.1.1.20230501T154127Z.ac561c32271cd3d6.c83f81519cddcb667b3dcf6d208597a1940269d2&lang=en-ru&text={eng}") 
+        translate=perevod.json()
+        qaz=translate["def"]
+        xer=list(qaz)
+        zxlol=xer[0]
+        nae=list(zxlol.get("tr"))
+        nal=nae[0]
+        rus=nal.get("text")
+        await message.reply(rus)
+    except:
+        await message.reply("Ошибка перевода\nПример использования:\n/dict apple\nПока что можно переводить только по 1 слову")
+
+#/dice 1...6
+@dp.message_handler(commands=["dice"])
+async def cmd_dice(message: types.Message):
+    game=message.text
+    game=game.replace("/dice ","")
+
+    if game=="1":
+        await message.answer_dice(emoji="🎲")
+    elif game=="2":
+        await message.answer_dice(emoji="🎯")
+    elif game=="3":
+        await message.answer_dice(emoji="🏀")
+    elif game=="4":
+        await message.answer_dice(emoji="⚽")
+    elif game =="5":
+        await message.answer_dice(emoji="🎰")
+    elif game=="6":
+        await message.answer_dice(emoji="🎳")
+    else:
+        await message.reply('Неправильный ввод\nПример:\n/dice 1\n1-кубик, 2-дартс\n3-баскетбольный мяч\n4-футбольный мяч\n5-слот машина\n6-боулинг')
+        
 
 #опросы /poll
 @dp.message_handler(commands=['poll'])
@@ -63,24 +123,25 @@ async def poll(message: types.Message):
                                   type='regular',
                                   is_anonymous=False)
     except:
-        await message.reply('incorrect input')
+        await message.reply('Неправильный ввод\nПример ввода:\n/poll вопрос; ответ1; ответ2')
 
 
 #курс валюты /money
 @dp.message_handler(commands=['money'])
 async def kurs_valut(message: types.Message):
-    try:
-        price=dict(client.latest().dict)
+    try:    
+        price=client.latest().dict
         x=[]
         vvod=message.text
         vvod=vvod.replace('/money ','')
-        x=vvod.split('; ')
+        x=vvod.split(' ')
         name_value=x[0]
         kolizhestvo=x[1]
-        vivod=int(price[name_value])*int(kolizhestvo)
-        await message.reply(f'1 доллар= {vivod} {name_value}')
+        vivod=float(price[name_value])*float(kolizhestvo)
+       
+        await message.reply(f'{kolizhestvo} USD= {vivod} {name_value}')
     except:
-        await message.reply('incorrect input')
+        await message.reply('Неправильный ввод\nПример ввода:\n/money RUB 1')
     
 #/image....
 @dp.message_handler(commands=['image'])
@@ -191,7 +252,7 @@ async def get_weather(message: types.Message):
          if weather_description in code_to_smile: 
              wd = code_to_smile[weather_description] 
          else: 
-             wd = "ошибка" 
+             wd = "⭐️" 
   
          humidity = data["main"]["humidity"] 
          pressure = data["main"]["pressure"] 
@@ -202,14 +263,14 @@ async def get_weather(message: types.Message):
              data["sys"]["sunrise"]) 
   
          await message.reply(f"***{datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}***\n" 
-               f"Погода в городе: {city}\nТемпература: {cur_weather}C° {wd}\n" 
-               f"Влажность: {humidity}%\nДавление: {pressure} мм.рт.ст\nВетер: {wind} м/с\n" 
-               f"Восход солнца: {sunrise_timestamp}\nЗакат солнца: {sunset_timestamp}\nПродолжительность дня: {length_of_the_day}\n" 
-               f"***Хорошего дня!***" 
-               ) 
+                                               f"Погода в городе: {city}\nТемпература: {cur_weather}C° {wd}\n" 
+                                               f"Влажность: {humidity}%\nДавление: {pressure} мм.рт.ст\nВетер: {wind} м/с\n" 
+                                               f"Продолжительность дня: {length_of_the_day}\n" 
+                                               f"⭐️Удачного дня!⭐️" 
+                                                   ) 
  
     except: 
-         await message.reply("такого города нету") 
+         await message.reply("Город не найден\nПример ввода:\n/weather Kemerovo") 
 
 
 #старт бота 
